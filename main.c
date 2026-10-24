@@ -14,9 +14,11 @@ void part1();
 void part2();
 float avg(const float *arr, unsigned int count);
 double f(double x);
-void printTable(double x_arr[], double y_arr[], unsigned int size);
-unsigned int printSize(double num);
+void printTable(double x_arr[], double y_arr[], unsigned int size, double delta);
 void pressEnterToContinue();
+unsigned int beforeDecimalSize(double num);
+unsigned int afterDecimalSize(double num);
+unsigned int afterDecimalSizeDelta(double num, double delta);
 
 int main(){
     SetConsoleOutputCP(CP_UTF8);
@@ -46,8 +48,6 @@ int main(){
 }
 
 void part1(){
-    int age, semester;
-    float admission_score, score_subj1, score_subj2, score_subj3, score_subj4, score_subj5, score_subj_avg;
 
     system("cls");
 
@@ -118,12 +118,10 @@ void part2(){
         double x1, x2;
         printf("Початкове значення аргументу: ");
         scanf("%lf", &x1);
-        printf("%lf\n", x1);
 
         while(true){
             printf("Кінцеве значення аргументу: ");
             scanf("%lf", &x2);
-            printf("%lf\n", x2);
 
             if(x2 > x1)break;
             printf("Неправильне кінцеве значення\n");
@@ -140,13 +138,12 @@ void part2(){
             x_arr[i] = x1 + delta*i;
             y_arr[i] = f(x_arr[i]);
         }
-        printTable(x_arr, y_arr, n);
+        printTable(x_arr, y_arr, n, delta);
     }
     else {
         double x1, x2;
         printf("Початкове значення аргументу: ");
         scanf("%lf", &x1);
-        printf("%lf\n", x1);
 
         while(true){
             printf("Кінцеве значення аргументу: ");
@@ -172,7 +169,7 @@ void part2(){
             x_arr[i] = x1 + delta*i;
             y_arr[i] = f(x_arr[i]);
         }
-        printTable(x_arr, y_arr, n);
+        printTable(x_arr, y_arr, n, delta);
     }
     pressEnterToContinue();
 }
@@ -192,21 +189,34 @@ double f(double x){
 }
 
 //Виведення таблиці на екран
-void printTable(double x_arr[], double y_arr[], unsigned int size){
+void printTable(double x_arr[], double y_arr[], unsigned int size, double delta){
     //Обчислення розміру комірки для чисел
-    unsigned int max_print_size = 0;
+    unsigned int max_before_decimal_x = 0;
+    unsigned int max_before_decimal_y = 0;
+    unsigned int max_after_decimal_x = 0;
+    unsigned int max_after_decimal_y = 0;
 
     for(unsigned int i = 0; i < size; i++){
-        unsigned int print_size = printSize(x_arr[i]);
-        if(max_print_size < print_size)max_print_size = print_size;
-        print_size = printSize(y_arr[i]);
-        if(max_print_size < print_size)max_print_size = print_size;
+        unsigned int before_decimal = beforeDecimalSize(x_arr[i]);
+        unsigned int after_decimal = afterDecimalSizeDelta(x_arr[i], delta);
+
+        max_before_decimal_x = before_decimal > max_before_decimal_x ? before_decimal : max_before_decimal_x;
+        max_after_decimal_x = after_decimal > max_after_decimal_x ? after_decimal : max_after_decimal_x;
+
+        before_decimal = beforeDecimalSize(y_arr[i]);
+        after_decimal = afterDecimalSize(y_arr[i]);
+
+        max_before_decimal_y = before_decimal > max_before_decimal_y ? before_decimal : max_before_decimal_y;
+        max_after_decimal_y = after_decimal > max_after_decimal_y ? after_decimal : max_after_decimal_y;
     }
+    unsigned int max_size_print = max_before_decimal_x + max_after_decimal_x > max_before_decimal_y + max_before_decimal_y
+    ? max_before_decimal_x + max_after_decimal_x
+    : max_before_decimal_y + max_before_decimal_y;
 
     //Виведення таблиці
     for(unsigned int i = 0; i < size; i++){
         if(i == 0)printf("╔═╦");
-        for(int j = 0; j < max_print_size; j++)printf("═");
+        for(int j = 0; j < max_size_print; j++)printf("═");
         if(i == size - 1)printf("╗\n");
         else printf("╤");
     }
@@ -214,8 +224,8 @@ void printTable(double x_arr[], double y_arr[], unsigned int size){
     for(unsigned int i = 0; i < size; i++){
         if(i == 0)printf("║x║");
         printf("%*.*lf",
-               max_print_size,
-               log10(fabs(x_arr[i])) < 0 ? 2 - (int)floor(log10(fabs(x_arr[i]))) : 2,
+               max_size_print,
+               max_after_decimal_x,
                x_arr[i]);
         if(i == size - 1)printf("║\n");
         else printf("│");
@@ -223,7 +233,7 @@ void printTable(double x_arr[], double y_arr[], unsigned int size){
 
     for(unsigned int i = 0; i < size; i++){
         if(i == 0)printf("╟─╫");
-        for(int j = 0; j < max_print_size; j++)printf("─");
+        for(int j = 0; j < max_size_print; j++)printf("─");
         if(i == size - 1)printf("╢\n");
         else printf("┼");
     }
@@ -231,8 +241,8 @@ void printTable(double x_arr[], double y_arr[], unsigned int size){
     for(unsigned int i = 0; i < size; i++){
         if(i == 0)printf("║y║");
         printf("%*.*lf",
-               max_print_size,
-               log10(fabs(y_arr[i])) < 0 ? 2 - (int)floor(log10(fabs(y_arr[i]))) : 2,
+               max_size_print,
+               max_after_decimal_y,
                y_arr[i]);
         if(i == size - 1)printf("║\n");
         else printf("│");
@@ -240,20 +250,32 @@ void printTable(double x_arr[], double y_arr[], unsigned int size){
 
     for(unsigned int i = 0; i < size; i++){
         if(i == 0)printf("╚═╩");
-        for(int j = 0; j < max_print_size; j++)printf("═");
+        for(int j = 0; j < max_size_print; j++)printf("═");
         if(i == size - 1)printf("╝\n");
         else printf("╧");
     }
 }
 //Обчислення ширини комірки, яку займає цифра
-unsigned int printSize(double num){
-    if(num == 0)return 1;
-    return num<0?1:0 + 2 + abs((int)floor(log10(fabs(num)))) + 2;
+unsigned int beforeDecimalSize(double num){
+    if(num == 0)return 2;
+    return (num < 0 ? 2 : 1) + ((int)floor(log10(fabs(num))) < 1 ? 1 : abs((int)floor(log10(fabs(num)))));
+}
+
+unsigned int afterDecimalSize(double num){
+    if(num == 0)return 2;
+    return (int)floor(log10(fabs(num))) > 0 ? 2 : (abs((int)floor(log10(fabs(num)))) + 2);
+}
+
+unsigned int afterDecimalSizeDelta(double num, double delta){
+    unsigned int size_num = afterDecimalSize(num);
+    unsigned int size_delta = afterDecimalSize(delta);
+    if(size_delta > size_num)return size_delta;
+    return size_num;
 }
 
 //Очікує Enter від користувача щоб продовжити
 void pressEnterToContinue() {
-    printf("\Натисніть Enter щоб продовжити...");
+    printf("\nНатисніть Enter щоб продовжити...");
 
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
