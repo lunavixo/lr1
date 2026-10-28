@@ -193,7 +193,7 @@ void printTable(double x_arr[], double y_arr[], unsigned int size){
     printf("║           x           │           y           ║\n");
     printf("╠═══════════════════════╪═══════════════════════╣\n");
     for(unsigned int i = 0; i < size; i++){
-        printf("║%23.2lf│%23.2lf║\n", x_arr[i], y_arr[i]);
+        printf("║%23.8lf│%23.8lf║\n", x_arr[i], y_arr[i]);
         if(i == size - 1)
             printf("╚═══════════════════════╧═══════════════════════╝\n");
         else
